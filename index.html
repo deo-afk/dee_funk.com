@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>You're the Constellation</title>
+<style>
+  :root{
+    --bg1:#0f2027;--bg2:#203a43;--bg3:#2c5364;--accent:#ffb6c1;--fade:#ffffff14;--text:#eaf6ff;--muted:#b8d0e0;--whatsapp:#25D366;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+  body{background:linear-gradient(180deg,var(--bg1),var(--bg2),var(--bg3));overflow-x:hidden}
+  .stars{position:fixed;inset:0;background:radial-gradient(ellipse at bottom,#0d1b2a 0%,#000 100%);z-index:-2}
+  .star-tex{position:fixed;inset:0;background:url('https://raw.githubusercontent.com/Julian-Nash/starfield/master/starfield.png') repeat;animation:move 60s linear infinite;opacity:.35;z-index:-1}
+  @keyframes move{from{background-position:0 0}to{background-position:-10000px 10000px}}
+
+  header{padding:24px 16px 10px;text-align:center}
+  header h1{margin:0;font-size:2rem;letter-spacing:.5px}
+  header p{margin:.5rem 0 0;color:var(--muted)}
+  .tag{display:inline-block;font-size:.8rem;padding:4px 8px;border-radius:999px;background:#ffffff1a;border:1px solid #ffffff22;margin-left:6px}
+
+  nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0 0}
+  nav a{color:#cde7ff;text-decoration:none;padding:6px 10px;border-radius:999px;background:var(--fade);border:1px solid #ffffff14}
+  nav a.active{background:#ffffff22}
+
+  /* Setup panel (admin) */
+  .setup{margin:14px auto 16px;max-width:980px;padding:12px 14px;border-radius:12px;background:#00000033;border:1px dashed #ffffff3a}
+  .setup h3{margin:0 0 8px}
+  .field{display:flex;gap:8px;flex-wrap:wrap}
+  .input{flex:1;min-width:240px;padding:10px;border-radius:10px;border:1px solid #ffffff22;background:#0b1b25;color:#e8f5ff}
+  .btn{cursor:pointer;border:none;border-radius:999px;padding:10px 16px;background:#ffffff1a;color:var(--text);border:1px solid #ffffff22}
+  .btn.primary{background:var(--accent);color:#111}
+  .hint{font-size:.9rem;color:var(--muted);margin-top:8px}
+  .share{margin-top:10px;display:none}
+  .share .input{background:#07141c}
+
+  /* Music hero (half-page) */
+  .music-hero{position:relative;height:50vh;max-height:60rem;min-height:320px;margin:10px auto 18px;max-width:980px;border-radius:16px;overflow:hidden;background:#00000055;border:1px solid #ffffff22;backdrop-filter:blur(6px)}
+  .music-fill{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  iframe.music-embed{border:0;width:100%;height:100%}
+  .mp3-cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:10px}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:#ffffff1a;border:1px solid #ffffff2a;color:#eef;padding:10px 16px;border-radius:999px}
+  .overlay-btn{position:absolute;right:14px;bottom:14px}
+  .hidden{display:none}
+
+  main{max-width:980px;margin:0 auto;padding:8px 16px 120px}
+  .page{display:none;padding:18px;border-radius:14px;background:var(--fade);border:1px solid #ffffff12;backdrop-filter:blur(3px)}
+  .page.active{display:block;animation:fadeIn .5s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  h2{margin:.2rem 0 1rem;font-weight:700}
+  .poem{white-space:pre-line;line-height:1.75;color:#eef7ff}
+  .btn-row{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .btn.whatsapp{background:var(--whatsapp);color:#fff}
+
+  footer{position:fixed;left:0;right:0;bottom:0;padding:10px 14px;text-align:center;color:#cfe7ff;background:#00000040;border-top:1px solid #ffffff22;backdrop-filter:blur(6px)}
+  .sig{color:var(--accent);font-family:"Brush Script MT",cursive}
+</style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="star-tex"></div>
+
+  <header>
+    <h1>She Is the Constellation <span class="tag" id="modeTag">Gift</span></h1>
+    <p>Every page is a facet of her — light, strength, mystery, and the hush between stars.</p>
+    <nav id="topnav">
+      <a href="#home" data-page="home">Home</a>
+      <a href="#light" data-page="light">Her Light</a>
+      <a href="#strength" data-page="strength">Her Strength</a>
+      <a href="#mystery" data-page="mystery">Her Mystery</a>
+      <a href="#finale" data-page="finale">Final Message</a>
+    </nav>
+  </header>
+
+  <!-- Setup panel (for you). Hidden in Gift mode. -->
+  <section class="setup" id="setupPanel">
+    <h3>Setup before you send</h3>
+    <div class="field">
+      <input class="input" id="musicInput" placeholder="Paste a YouTube link (preferred) or a direct .mp3 URL"/>
+      <button class="btn primary" id="applyMusic">Apply</button>
+      <button class="btn" id="genLink">Generate gift link</button>
+    </div>
+    <div class="hint">Tips: Use YouTube links like https://youtu.be/VIDEOID or https://www.youtube.com/watch?v=VIDEOID. Direct .mp3 URLs also work.</div>
+    <div class="share" id="shareRow">
+      <div class="field" style="margin-top:10px">
+        <input class="input" id="shareLink" readonly />
+        <button class="btn" id="copyLink">Copy link</button>
+      </div>
+      <div class="hint">Send this link to her. It will open in Gift mode with music autoplaying when possible.</div>
+    </div>
+  </section>
+
+  <!-- Music hero (half-page) -->
+  <section class="music-hero" id="musicHero">
+    <div class="music-fill" id="musicArea">
+      <!-- YouTube iframe or MP3 cover will be injected here -->
+      <div class="mp3-cover hidden" id="mp3Cover">
+        <div class="pill">🎵 Now playing for you</div>
+        <div class="hint">If you don’t hear music, tap “Unmute/Play” below (some phones block autoplay with sound).</div>
+      </div>
+    </div>
+    <div class="overlay-btn">
+      <button class="btn" id="unmuteBtn" title="Unmute/Play">🔊 Unmute/Play</button>
+      <button class="btn hidden" id="pauseBtn" title="Pause">⏸️ Pause</button>
+    </div>
+  </section>
+
+  <main id="pages">
+    <section class="page" id="page-home">
+      <h2>Opening</h2>
+      <p class="poem">
+She does not enter a room — the room learns her name.
+Stars lean a little closer.
+Silence softens.
+And everything finds its rhythm.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="#light">Begin</a>
+      </div>
+    </section>
+
+    <section class="page" id="page-light">
+      <h2>Her Light</h2>
+      <p class="poem">
+She walks like dawn —
+soft, certain,
+impossible to ignore.
+
+Even the night
+stays a little longer
+just to see her rise.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="#home">Back</a>
+        <a class="btn primary" href="#strength">Next</a>
+      </div>
+    </section>
+
+    <section class="page" id="page-strength">
+      <h2>Her Strength</h2>
+      <p class="poem">
+She is the storm
+that never breaks the sky —
+fierce,
+yet always kind.
+
+Even in rain,
+she blooms.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="#light">Back</a>
+        <a class="btn primary" href="#mystery">Next</a>
+      </div>
+    </section>
+
+    <section class="page" id="page-mystery">
+      <h2>Her Mystery</h2>
+      <p class="poem">
+She is the question
+the universe keeps asking —
+a riddle wrapped in moonlight,
+a secret the stars protect.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="#strength">Back</a>
+        <a class="btn primary" href="#finale">Next</a>
+      </div>
+    </section>
+
+    <section class="page" id="page-finale">
+      <h2>Final Message</h2>
+      <p class="poem">
+This is not about us.
+It is about you —
+the way you turn ordinary moments
+into constellations.
+
+I will always look up
+and find you there.
+— Created by Ezekiel
+      </p>
+      <div class="btn-row">
+        <a class="btn whatsapp" href="https://wa.me/254752578163?text=I%20just%20visited%20your%20gift%20site%20and%20I%20love%20it!" target="_blank" rel="noopener">💬 Send reaction on WhatsApp</a>
+        <a class="btn" href="#home">Restart</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with love and stars • <span class="sig">Ezekiel</span>
+  </footer>
+
+<script>
+  // ---------- Helpers ----------
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const qs = new URLSearchParams(location.search);
+
+  function setActive(hash){
+    $$('#topnav a').forEach(a=>a.classList.toggle('active', a.getAttribute('href')===hash));
+  }
+  function showPage(id){ $$('.page').forEach(p=>p.classList.remove('active')); (document.getElementById('page-'+id)||$('#page-home')).classList.add('active'); setActive('#'+id); }
+  function route(){ showPage((location.hash||'#home').slice(1)); }
+  window.addEventListener('hashchange', route);
+
+  // ---------- Music state ----------
+  let musicKind=null, ytId=null, mp3Url=null, audioEl=null, ytIframe=null, ytReady=false, isPlaying=false;
+
+  function parseYouTubeId(url){
+    if(!url) return null;
+    const m1 = url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+    if(m1) return m1[1];
+    const m2 = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+    if(m2) return m2[1];
+    const m3 = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{6,})/);
+    if(m3) return m3[1];
+    return null;
+  }
+
+  function giftModeOn(){
+    $('#setupPanel').style.display='none';
+    $('#modeTag').textContent='Gift';
+  }
+  function setupModeOn(){
+    $('#setupPanel').style.display='block';
+    $('#modeTag').textContent='Setup';
+  }
+
+  // ---------- YouTube embed (autoplay muted, then unmute on tap) ----------
+  function setupYouTube(){
+    $('#mp3Cover').classList.add('hidden');
+    if(ytIframe) ytIframe.remove();
+    ytIframe = document.createElement('iframe');
+    ytIframe.className='music-embed';
+    ytIframe.allow='autoplay; encrypted-media; picture-in-picture';
+    ytIframe.referrerPolicy='strict-origin-when-cross-origin';
+    ytIframe.src = `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=${ytId}`;
+    $('#musicArea').prepend(ytIframe);
+    ytReady = true;
+    isPlaying = true; // playing muted by default
+    $('#pauseBtn').classList.remove('hidden'); // allow pause
+    $('#unmuteBtn').classList.remove('hidden'); // allow unmute
+  }
+
+  function ytPost(cmd){ // postMessage to YouTube iframe API
+    if(!ytIframe) return;
+    ytIframe.contentWindow?.postMessage(JSON.stringify({event:'command',func:cmd,args:[]}), '*');
+  }
+
+  // ---------- MP3 autoplay ----------
+  async function setupMp3(){
+    if(audioEl){ try{ audioEl.pause(); }catch(e){} audioEl.remove(); }
+    audioEl = new Audio(mp3Url);
+    audioEl.loop = true;
+    try{
+      await audioEl.play(); // attempt autoplay with sound
+      isPlaying = true;
+      $('#pauseBtn').classList.remove('hidden');
+      $('#unmuteBtn').classList.add('hidden'); // not needed for mp3
+    }catch(e){
+      // Autoplay blocked: show cover + unmute/play
+      $('#mp3Cover').classList.remove('hidden');
+      $('#unmuteBtn').classList.remove('hidden');
+      isPlaying = false;
+    }
+  }
+
+  // Try resume on first user interaction (helps autoplay policies)
+  function tryResume(){
+    if(musicKind==='yt'){
+      // Unmute + play
+      ytPost('playVideo'); ytPost('unMute');
+      $('#unmuteBtn').classList.add('hidden');
+      isPlaying = true;
+      window.removeEventListener('pointerdown', tryResume);
+    } else if(musicKind==='mp3' && audioEl){
+      audioEl.play().then(()=>{
+        $('#mp3Cover').classList.add('hidden');
+        $('#unmuteBtn').classList.add('hidden');
+        $('#pauseBtn').classList.remove('hidden');
+        isPlaying = true;
+        window.removeEventListener('pointerdown', tryResume);
+      }).catch(()=>{});
+    }
+  }
+
+  // ---------- Controls ----------
+  $('#unmuteBtn').addEventListener('click', tryResume);
+  $('#pauseBtn').addEventListener('click', ()=>{
+    if(musicKind==='yt'){ ytPost('pauseVideo'); isPlaying=false; $('#pauseBtn').textContent='▶️ Play'; $('#unmuteBtn').classList.remove('hidden'); }
+    if(musicKind==='mp3' && audioEl){ if(isPlaying){ audioEl.pause(); isPlaying=false; $('#pauseBtn').textContent='▶️ Play'; $('#unmuteBtn').classList.remove('hidden'); } else { audioEl.play(); isPlaying=true; $('#pauseBtn').textContent='⏸️ Pause'; $('#unmuteBtn').classList.add('hidden'); } }
+  });
+
+  // Also attempt resume on first interaction anywhere
+  window.addEventListener('pointerdown', tryResume, {once:false});
+
+  // ---------- Setup UI (your side) ----------
+  $('#applyMusic').addEventListener('click', ()=>{
+    const val = ($('#musicInput').value||'').trim();
+    if(!val){ alert('Paste a YouTube link or a direct .mp3 URL.'); return; }
+    const id = parseYouTubeId(val);
+    if(id){ musicKind='yt'; ytId=id; setupYouTube(); }
+    else if(/\.mp3(\?|$)/i.test(val)){ musicKind='mp3'; mp3Url=val; setupMp3(); }
+    else{ alert('Unsupported link. Use YouTube (youtu.be or youtube.com/watch?v=) or a direct .mp3 URL.'); }
+  });
+
+  $('#genLink').addEventListener('click', ()=>{
+    let url=null;
+    if(musicKind==='yt' && ytId){ url = `${location.origin}${location.pathname}?yt=${encodeURIComponent(ytId)}#home`; }
+    if(musicKind==='mp3' && mp3Url){ url = `${location.origin}${location.pathname}?mp3=${encodeURIComponent(mp3Url)}#home`; }
+    if(!url){ alert('Apply a music link first, then generate.'); return; }
+    $('#shareLink').value = url; $('#shareRow').style.display='block';
+  });
+
+  $('#copyLink').addEventListener('click', async ()=>{
+    const v = $('#shareLink').value; if(!v) return;
+    try{ await navigator.clipboard.writeText(v); $('#copyLink').textContent='Copied!'; setTimeout(()=>$('#copyLink').textContent='Copy link',1200);}catch(e){ prompt('Copy this link:', v); }
+  });
+
+  // ---------- Init ----------
+  function init()
+    route();
+    $$('#topnav a').forEach(a=>a.addEventListener('click', ()=>setTimeout(route,0)));
+    if(qs.get('yt')){ musicKind='yt'; ytId=qs.get('yt'); giftModeOn(); setupYouTube(); }
+    else if(qs.get('mp3')){ musicKind='mp3'; mp3Url=qs.get('mp3'); giftModeOn(); setupMp3(); }
+    else{ setupModeOn(); }
+  }
+  init();
+</script>
+</body>
+    </html>
